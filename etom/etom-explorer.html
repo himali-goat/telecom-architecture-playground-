@@ -238,6 +238,19 @@
       line-height:1.55;
       font-size:14px;
     }
+    .matrix-note{
+      background:var(--accent-soft);
+      border:1px solid #bfd0f6;
+      border-radius:14px;
+      padding:14px;
+      color:#29467a;
+      line-height:1.55;
+      font-size:14px;
+      margin-top:12px;
+    }
+    .matrix-note b{
+      color:#173363;
+    }
     @media (max-width: 700px){
       h1{font-size:26px;}
       .body{padding-left:18px;}
@@ -253,8 +266,14 @@
       <h1>eTOM Simplified Tree Explorer</h1>
       <p class="sub">
         Click any level to expand from Level 0 to Level 2. This version is intentionally simplified for architecture discussion and presentation.
-        Operations is expandable into Fulfillment, Assurance, Billing, and then into Customer, Service, Resource, and Partner domain views. (*Author: Rabindra Aryal*).
+        Operations is expandable into Fulfillment, Assurance, Billing, and then into Customer, Service, Resource, and Partner domain views.
+        <em>Author: Rabindra Aryal</em>.
       </p>
+      <div class="matrix-note">
+        <b>OPS matrix view:</b> Operations is modeled as a matrix:
+        lifecycle <b>(Fulfillment, Assurance, Billing)</b> across domains
+        <b>Customer (CRM)</b>, <b>Service (SMO)</b>, <b>Resource (RMO)</b>, and <b>Partner (PRM)</b>.
+      </div>
       <div class="controls">
         <button class="primary" onclick="expandAll()">Expand all</button>
         <button onclick="collapseAll()">Collapse all</button>
@@ -420,7 +439,7 @@
                       <div class="leaf-grid">
                         <div class="leaf">
                           <h4>Customer Billing</h4>
-                          <p>Invoice generation, payment handling, balance management, credits, disputes, and collections.(TMF: Billing and Collections)</p>
+                          <p>Invoice generation, payment handling, balance management, credits, disputes, and collections. (TMF: Billing and Collections)</p>
                         </div>
                         <div class="leaf">
                           <h4>Service Charging and Rating</h4>
@@ -428,11 +447,11 @@
                         </div>
                         <div class="leaf">
                           <h4>Resource Usage and Mediation</h4>
-                          <p>Resource-related charging drivers, usage capture dependencies, and technical billable events.(TMF: Usage Capture/ Mediation / Billable Event Generation)</p>
+                          <p>Usage capture, mediation, and billable event generation. (TMF: Usage Capture / Mediation / Billable Event Generation)</p>
                         </div>
                         <div class="leaf">
                           <h4>Partner / Supplier Settlement</h4>
-                          <p>Intercompany charging, settlement, partner invoicing, and supplier financial reconciliation.(TMF: Partner / Supplier Billing)</p>
+                          <p>Intercompany charging, settlement, partner invoicing, and supplier financial reconciliation. (TMF: Partner Settlement & Interconnect Billing)</p>
                         </div>
                       </div>
                     </div>

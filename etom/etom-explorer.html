@@ -1,1 +1,519 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eTOM Simplified Tree Explorer</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --line:#d7e0ef;
+      --text:#142033;
+      --muted:#5e6b85;
+      --accent:#2f6fed;
+      --accent-soft:#eaf1ff;
+      --ops:#fff3dd;
+      --sip:#eaf8ee;
+      --em:#f4ebff;
+      --shadow:0 8px 24px rgba(20,32,51,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:28px 20px 40px;
+    }
+    .hero{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:22px 22px 18px;
+      box-shadow:var(--shadow);
+      margin-bottom:18px;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:32px;
+      line-height:1.15;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+      max-width:900px;
+    }
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+    button{
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    button.primary{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
+    .legend{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:18px 0 8px;
+    }
+    .legend-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      color:var(--muted);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 11px;
+    }
+    .dot{
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      display:inline-block;
+    }
+    .sip{background:#79c98e;}
+    .ops{background:#efb347;}
+    .em{background:#ae7cf0;}
+    .tree{
+      display:grid;
+      gap:14px;
+      margin-top:18px;
+    }
+    details.node{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    details.node[open]{
+      border-color:#bfd0f6;
+    }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      padding:18px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    summary::-webkit-details-marker{
+      display:none;
+    }
+    .summary-left{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      min-width:0;
+    }
+    .chev{
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:15px;
+      flex:0 0 auto;
+      color:var(--muted);
+      background:#fff;
+      transition:transform .18s ease;
+    }
+    details[open] > summary .chev{
+      transform:rotate(90deg);
+    }
+    .level-pill{
+      font-size:12px;
+      font-weight:700;
+      border-radius:999px;
+      padding:6px 9px;
+      color:#1e2a42;
+      background:#eef3fb;
+      border:1px solid var(--line);
+      white-space:nowrap;
+    }
+    .title-block{
+      min-width:0;
+    }
+    .node-title{
+      font-size:20px;
+      font-weight:800;
+      line-height:1.25;
+      margin:0;
+    }
+    .node-desc{
+      margin:4px 0 0;
+      color:var(--muted);
+      line-height:1.5;
+      font-size:14px;
+    }
+    .body{
+      padding:0 18px 18px 58px;
+      display:grid;
+      gap:12px;
+    }
+    .children{
+      display:grid;
+      gap:10px;
+      position:relative;
+    }
+    .child{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fbfcff;
+      overflow:hidden;
+    }
+    .child > summary{
+      padding:14px 14px;
+    }
+    .child .node-title{
+      font-size:17px;
+    }
+    .child .body{
+      padding-left:50px;
+    }
+    .leaf-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+      gap:10px;
+    }
+    .leaf{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      padding:14px;
+    }
+    .leaf h4{
+      margin:0 0 8px;
+      font-size:15px;
+      line-height:1.35;
+    }
+    .leaf p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.5;
+      font-size:14px;
+    }
+    .ops-highlight{
+      border-left:6px solid #efb347;
+      background:linear-gradient(90deg, #fff8ea 0%, #ffffff 55%);
+    }
+    .sip-highlight{
+      border-left:6px solid #79c98e;
+      background:linear-gradient(90deg, #eefaf1 0%, #ffffff 55%);
+    }
+    .em-highlight{
+      border-left:6px solid #ae7cf0;
+      background:linear-gradient(90deg, #f7f0ff 0%, #ffffff 55%);
+    }
+    .note{
+      background:#fff;
+      border:1px dashed var(--line);
+      border-radius:14px;
+      padding:14px;
+      color:var(--muted);
+      line-height:1.55;
+      font-size:14px;
+    }
+    @media (max-width: 700px){
+      h1{font-size:26px;}
+      .body{padding-left:18px;}
+      .child .body{padding-left:18px;}
+      summary{padding:15px;}
+      .node-title{font-size:18px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>eTOM Simplified Tree Explorer</h1>
+      <p class="sub">
+        Click any level to expand from Level 0 to Level 2. This version is intentionally simplified for architecture discussion and presentation.
+        Operations is expandable into Fulfillment, Assurance, Billing, and then into Customer, Service, Resource, and Partner domain views. (*Author: Rabindra Aryal*).
+      </p>
+      <div class="controls">
+        <button class="primary" onclick="expandAll()">Expand all</button>
+        <button onclick="collapseAll()">Collapse all</button>
+        <button onclick="focusOPS()">Open OPS path</button>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="dot sip"></span> SIP = Strategy, Infrastructure & Product</div>
+        <div class="legend-item"><span class="dot ops"></span> OPS = Operations</div>
+        <div class="legend-item"><span class="dot em"></span> EM = Enterprise Management</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>How to read this:</b> Level 0 shows the three major pillars. Level 1 expands each pillar. Level 2 is where architects usually start mapping processes, systems, and operating capabilities.
+    </div>
+
+    <div class="tree" id="treeRoot">
+      <details class="node" open>
+        <summary>
+          <div class="summary-left">
+            <div class="chev">›</div>
+            <div class="title-block">
+              <div class="node-title">Level 0 — eTOM Business Process Framework</div>
+              <div class="node-desc">The complete business framework simplified into 3 top-level pillars.</div>
+            </div>
+          </div>
+          <div class="level-pill">L0</div>
+        </summary>
+        <div class="body">
+          <div class="children">
+            <details class="child">
+              <summary class="sip-highlight">
+                <div class="summary-left">
+                  <div class="chev">›</div>
+                  <div class="title-block">
+                    <div class="node-title">1. Strategy, Infrastructure & Product (SIP)</div>
+                    <div class="node-desc">Build the business: strategy, products, services, resources, and supply chain direction.</div>
+                  </div>
+                </div>
+                <div class="level-pill">L1</div>
+              </summary>
+              <div class="body">
+                <div class="leaf-grid">
+                  <div class="leaf">
+                    <h4>Strategy & Commit</h4>
+                    <p>Enterprise direction, market positioning, planning priorities, and major business commitments.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Infrastructure Lifecycle Management</h4>
+                    <p>Plan, build, and evolve infrastructure capabilities needed for service delivery.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Product Lifecycle Management</h4>
+                    <p>Define, design, launch, enhance, and retire product offers.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Service Lifecycle Management</h4>
+                    <p>Design and maintain customer-facing and resource-facing services.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Resource Lifecycle Management</h4>
+                    <p>Manage lifecycle of technical resources, platforms, and enabling assets over time.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Supply Chain Development & Management</h4>
+                    <p>Manage vendors, sourcing strategy, procurement relationships, and supply readiness.</p>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <details class="child" id="opsRoot">
+              <summary class="ops-highlight">
+                <div class="summary-left">
+                  <div class="chev">›</div>
+                  <div class="title-block">
+                    <div class="node-title">2. Operations (OPS)</div>
+                    <div class="node-desc">Run the business daily through Fulfillment, Assurance, and Billing across core telecom domains.</div>
+                  </div>
+                </div>
+                <div class="level-pill">L1</div>
+              </summary>
+              <div class="body">
+                <div class="children">
+                  <details class="child" id="opsFulfillment">
+                    <summary>
+                      <div class="summary-left">
+                        <div class="chev">›</div>
+                        <div class="title-block">
+                          <div class="node-title">2.1 Fulfillment</div>
+                          <div class="node-desc">Sell, capture, decompose, provision, activate, and complete customer demand.</div>
+                        </div>
+                      </div>
+                      <div class="level-pill">L2</div>
+                    </summary>
+                    <div class="body">
+                      <div class="leaf-grid">
+                        <div class="leaf">
+                          <h4>Customer Fulfillment</h4>
+                          <p>Service: Customer Interface Mgmt + Order Handling.</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Service Fulfillment</h4>
+                          <p>Service Configuration and Activation.</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Resource Fulfillment</h4>
+                          <p>Resource Provisioning.</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Partner / Supplier Fulfillment</h4>
+                          <p>Supplier / Partner Management.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+
+                  <details class="child" id="opsAssurance">
+                    <summary>
+                      <div class="summary-left">
+                        <div class="chev">›</div>
+                        <div class="title-block">
+                          <div class="node-title">2.2 Assurance</div>
+                          <div class="node-desc">Monitor, detect, analyze, resolve, and improve issues affecting customers and services.</div>
+                        </div>
+                      </div>
+                      <div class="level-pill">L2</div>
+                    </summary>
+                    <div class="body">
+                      <div class="leaf-grid">
+                        <div class="leaf">
+                          <h4>Customer Assurance</h4>
+                          <p>Customer care, complaint handling, trouble intake, communication, and resolution updates (TMF: Customer Problem Handling).</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Service Assurance</h4>
+                          <p>Service quality management, service problem handling, SLA management, and performance control. (TMF: Service Quality + Service Problem Management)</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Resource Assurance</h4>
+                          <p>Fault management, technical diagnostics, resource performance, and restoration activities. (TMF: Resource Trouble + Performance Management)</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Partner / Supplier Assurance</h4>
+                          <p>Issue coordination and service quality management with external providers and partners. (TMF: Partner / Supplier Problem Management)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+
+                  <details class="child" id="opsBilling">
+                    <summary>
+                      <div class="summary-left">
+                        <div class="chev">›</div>
+                        <div class="title-block">
+                          <div class="node-title">2.3 Billing</div>
+                          <div class="node-desc">Charge, invoice, collect, settle, and manage financial interactions tied to telecom services.</div>
+                        </div>
+                      </div>
+                      <div class="level-pill">L2</div>
+                    </summary>
+                    <div class="body">
+                      <div class="leaf-grid">
+                        <div class="leaf">
+                          <h4>Customer Billing</h4>
+                          <p>Invoice generation, payment handling, balance management, credits, disputes, and collections.(TMF: Billing and Collections)</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Service Charging and Rating</h4>
+                          <p>Usage measurement, rating inputs, recurring service charge management, and charge integrity. (TMF: Rating and Charging)</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Resource Usage and Mediation</h4>
+                          <p>Resource-related charging drivers, usage capture dependencies, and technical billable events.(TMF: Usage Capture/ Mediation / Billable Event Generation)</p>
+                        </div>
+                        <div class="leaf">
+                          <h4>Partner / Supplier Settlement</h4>
+                          <p>Intercompany charging, settlement, partner invoicing, and supplier financial reconciliation.(TMF: Partner / Supplier Billing)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+            </details>
+
+            <details class="child">
+              <summary class="em-highlight">
+                <div class="summary-left">
+                  <div class="chev">›</div>
+                  <div class="title-block">
+                    <div class="node-title">3. Enterprise Management (EM)</div>
+                    <div class="node-desc">Run the company internally: governance, finance, risk, people, compliance, and corporate support.</div>
+                  </div>
+                </div>
+                <div class="level-pill">L1</div>
+              </summary>
+              <div class="body">
+                <div class="leaf-grid">
+                  <div class="leaf">
+                    <h4>Financial & Asset Management</h4>
+                    <p>Budgeting, accounting, cost control, capitalization, and enterprise asset governance.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Human Resources Management</h4>
+                    <p>Workforce planning, recruiting, performance, capability development, and employee lifecycle.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Enterprise Risk & Compliance</h4>
+                    <p>Risk management, policy control, legal compliance, audit, and internal governance.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Enterprise Planning and Governance</h4>
+                    <p>Corporate planning, transformation priorities, portfolio decisions, and business direction.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Knowledge, Research & Quality</h4>
+                    <p>Organizational learning, process quality, methods, and continuous improvement.</p>
+                  </div>
+                  <div class="leaf">
+                    <h4>Stakeholder Management & Corporate Services</h4>
+                    <p>Legal, regulatory, communications, facilities, procurement governance, and executive support.</p>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <script>
+    function expandAll() {
+      document.querySelectorAll('details').forEach(d => d.open = true);
+    }
+
+    function collapseAll() {
+      document.querySelectorAll('details').forEach(d => d.open = false);
+      const root = document.querySelector('.node');
+      if (root) root.open = true;
+    }
+
+    function focusOPS() {
+      collapseAll();
+      const opsRoot = document.getElementById('opsRoot');
+      const full = document.querySelector('.node');
+      const fulfillment = document.getElementById('opsFulfillment');
+      const assurance = document.getElementById('opsAssurance');
+      const billing = document.getElementById('opsBilling');
+      full.open = true;
+      opsRoot.open = true;
+      fulfillment.open = true;
+      assurance.open = true;
+      billing.open = true;
+      opsRoot.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  </script>
+</body>
+</html>
+

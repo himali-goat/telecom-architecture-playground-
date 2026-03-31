@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BSS Interaction Designer</title>
+  <title>BSS Interaction Designer — V2</title>
   <style>
     :root{
       --bg:#0f172a;
@@ -15,20 +15,28 @@
       --accent:#3b82f6;
       --good:#10b981;
       --chip:#0b1220;
+      --cust:#1d4ed8;
+      --comm:#7c3aed;
+      --order:#0891b2;
+      --resource:#0f766e;
+      --bill:#b45309;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);color:var(--text);}
-    .wrap{max-width:1200px;margin:0 auto;padding:32px 20px 48px;}
+    .wrap{max-width:1280px;margin:0 auto;padding:32px 20px 48px;}
     .hero,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.2);}
     .hero{padding:24px;margin-bottom:18px;}
-    .grid{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start;}
+    .grid{display:grid;grid-template-columns:400px 1fr;gap:18px;align-items:start;}
     .card{padding:20px;}
     h1{margin:0 0 8px;font-size:34px;line-height:1.1;}
     h2{margin:0 0 12px;font-size:20px;}
     h3{margin:18px 0 10px;font-size:17px;}
     p{margin:0;color:var(--muted);line-height:1.6;}
     label{display:block;font-size:13px;margin:14px 0 6px;color:var(--muted);}
-    textarea,select,input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 13px;font-size:14px;outline:none;}
+    textarea,select,input{
+      width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+      border-radius:12px;padding:12px 13px;font-size:14px;outline:none;
+    }
     textarea{min-height:120px;resize:vertical;}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
     .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
@@ -41,38 +49,35 @@
     .map-item b{display:block;margin-bottom:6px;}
     .step{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;}
     .step-num{color:var(--good);font-weight:700;margin-bottom:6px;}
-    .diagram{overflow-x:auto;padding-bottom:6px;}
-    .flow{display:flex;align-items:center;gap:10px;min-width:max-content;flex-wrap:nowrap;}
-    .box{min-width:170px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;}
-    .box-title{font-weight:700;margin-bottom:6px;}
-    .box-sub{font-size:12px;color:var(--muted);}
-    .arrow{font-size:26px;color:var(--accent);font-weight:700;}
     .hint{font-size:12px;color:var(--muted);margin-top:10px;}
     .empty{background:var(--panel2);border:1px dashed var(--line);border-radius:14px;padding:20px;color:var(--muted);line-height:1.6;}
     .legend{margin-top:12px;font-size:13px;color:var(--muted);}
-    @media (max-width: 900px){.grid,.row,.map-grid{grid-template-columns:1fr;}h1{font-size:28px;}}
+    .arch-wrap{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));border:1px solid var(--line);border-radius:16px;padding:14px;overflow:auto;}
+    .layer-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:6px 0 10px;}
+    .diagram-row{display:flex;align-items:center;gap:14px;min-width:max-content;padding-bottom:4px;}
+    .sys-card{width:190px;min-height:116px;border-radius:16px;padding:14px;border:1px solid var(--line);background:var(--panel2);position:relative;box-shadow:0 8px 24px rgba(0,0,0,.18);}
+    .sys-card.active{outline:2px solid rgba(59,130,246,.55);box-shadow:0 0 0 2px rgba(59,130,246,.12), 0 10px 28px rgba(0,0,0,.22);}
+    .sys-card .num{position:absolute;top:10px;right:10px;font-size:11px;line-height:1;padding:5px 7px;border-radius:999px;background:#0b1220;border:1px solid var(--line);color:var(--text);font-weight:700;}
+    .sys-name{font-weight:700;font-size:16px;line-height:1.25;margin-right:34px;margin-bottom:8px;}
+    .sys-domain{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:5px 8px;margin-bottom:8px;color:#fff;}
+    .dom-customer{background:var(--cust);}
+    .dom-commercial{background:var(--comm);}
+    .dom-order{background:var(--order);}
+    .dom-resource{background:var(--resource);}
+    .dom-billing{background:var(--bill);}
+    .sys-sub{font-size:12px;line-height:1.45;color:var(--muted);}
+    .connector{font-size:28px;font-weight:700;color:var(--accent);flex:0 0 auto;}
+    .mini-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+    .mini-legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:6px 8px;border:1px solid var(--line);border-radius:999px;background:#0b1220;}
+    .swatch{width:10px;height:10px;border-radius:50%;display:inline-block;}
+    @media (max-width: 960px){.grid,.row,.map-grid{grid-template-columns:1fr;}h1{font-size:28px;}}
   </style>
 </head>
 <body>
-<div style="margin-bottom: 16px;">
-  <a href="../index.html" 
-     style="
-       text-decoration: none;
-       background: #3b82f6;
-       color: white;
-       padding: 8px 12px;
-       border-radius: 8px;
-       font-weight: bold;
-       font-size: 14px;
-     ">
-     ← Back to Home
-  </a>
-</div>
-<div class="wrap">
   <div class="wrap">
     <div class="hero">
       <h1>BSS Interaction Designer</h1>
-      <p>Enter a telecom use case and generate an architect-friendly view of eTOM mapping, domain systems, system interaction flow, and a simple visual diagram.</p>
+      <p>Enter a telecom use case and generate an architect-friendly view of eTOM mapping, domain systems, interaction flow, and a visual architecture diagram.</p>
     </div>
 
     <div class="grid">
@@ -139,7 +144,7 @@
           <button class="secondary" onclick="loadExample('billing')">Billing Example</button>
         </div>
 
-        <div class="hint">V1 scope: structured mapping + system flow + simple visual diagram. This version uses lightweight rules for common telecom scenarios.</div>
+        <div class="hint">V2 adds a clearer architecture diagram with domain-colored system cards and active-path sequencing.</div>
       </div>
 
       <div class="card">
@@ -151,7 +156,7 @@
             <br>• eTOM mapping
             <br>• domain system mapping
             <br>• step-by-step interaction flow
-            <br>• simple visual architecture flow
+            <br>• improved visual architecture diagram
           </div>
         </div>
       </div>
@@ -242,16 +247,16 @@
 
     function buildDiagram(flags, s){
       const boxes = [
-        {title: s.crm, sub: "Customer / CRM"},
-        {title: s.catalog, sub: "Product / Pricing"},
-        {title: s.oms, sub: "Order / Service"}
+        {title: s.crm, sub: "Customer relationship and account context", domain: "dom-customer", domLabel: "Customer / CRM"},
+        {title: s.catalog, sub: "Offer, plan, pricing, and eligibility", domain: "dom-commercial", domLabel: "Commercial / Catalog"},
+        {title: s.oms, sub: "Order capture, decomposition, and service intent", domain: "dom-order", domLabel: "Order / Service"}
       ];
       if(flags.order || flags.change){
-        boxes.push({title: s.orch, sub: "Orchestration"});
-        boxes.push({title: s.activation, sub: "Activation / Resource"});
+        boxes.push({title: s.orch, sub: "Fulfillment coordination and workflow control", domain: "dom-order", domLabel: "Orchestration"});
+        boxes.push({title: s.activation, sub: "Provisioning, activation, and resource execution", domain: "dom-resource", domLabel: "Resource / Activation"});
       }
       if(flags.billing || flags.order || flags.credit){
-        boxes.push({title: s.billing, sub: "Billing / Charging"});
+        boxes.push({title: s.billing, sub: "Charging, invoice readiness, and financial setup", domain: "dom-billing", domLabel: "Billing / Charging"});
       }
       return boxes;
     }
@@ -324,6 +329,29 @@
           ${systemFlow.map(x => `<span class="chip">${x}</span>`).join("")}
         </div>
 
+        <h3>Architecture diagram</h3>
+        <div class="arch-wrap">
+          <div class="layer-title">Primary interaction path</div>
+          <div class="diagram-row">
+            ${diagram.map((d, i) => `
+              ${i > 0 ? `<div class="connector">→</div>` : ``}
+              <div class="sys-card active">
+                <div class="num">${i+1}</div>
+                <div class="sys-name">${escapeHtml(d.title)}</div>
+                <div class="sys-domain ${d.domain}">${escapeHtml(d.domLabel)}</div>
+                <div class="sys-sub">${escapeHtml(d.sub)}</div>
+              </div>
+            `).join("")}
+          </div>
+          <div class="mini-legend">
+            <span><i class="swatch" style="background:var(--cust)"></i> Customer / CRM</span>
+            <span><i class="swatch" style="background:var(--comm)"></i> Commercial / Catalog</span>
+            <span><i class="swatch" style="background:var(--order)"></i> Order / Orchestration</span>
+            <span><i class="swatch" style="background:var(--resource)"></i> Resource / Activation</span>
+            <span><i class="swatch" style="background:var(--bill)"></i> Billing / Charging</span>
+          </div>
+        </div>
+
         <h3>Step-by-step interaction</h3>
         ${steps.map((s, i) => `
           <div class="step">
@@ -333,20 +361,7 @@
           </div>
         `).join("")}
 
-        <h3>Visual flow</h3>
-        <div class="diagram">
-          <div class="flow">
-            ${diagram.map((d, i) => `
-              ${i > 0 ? `<div class="arrow">→</div>` : ``}
-              <div class="box">
-                <div class="box-title">${d.title}</div>
-                <div class="box-sub">${d.sub}</div>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-
-        <div class="legend">V1 note: this is a practical architecture starter view for workshops and solution design, not a full orchestration engine.</div>
+        <div class="legend">V2 note: the diagram emphasizes system domains and active transaction path to make architecture discussion easier for workshops and design reviews.</div>
       `;
     }
 
@@ -367,4 +382,3 @@
   </script>
 </body>
 </html>
-

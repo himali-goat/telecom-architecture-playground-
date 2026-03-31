@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BSS Interaction Designer — V2</title>
+  <title>BSS Interaction Designer — Dynamic Flow</title>
   <style>
     :root{
       --bg:#0f172a;
@@ -21,6 +20,7 @@
       --order:#0891b2;
       --resource:#0f766e;
       --bill:#b45309;
+      --assure:#be185d;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);color:var(--text);}
@@ -66,11 +66,13 @@
     .dom-order{background:var(--order);}
     .dom-resource{background:var(--resource);}
     .dom-billing{background:var(--bill);}
+    .dom-assurance{background:var(--assure);}
     .sys-sub{font-size:12px;line-height:1.45;color:var(--muted);}
     .connector{font-size:28px;font-weight:700;color:var(--accent);flex:0 0 auto;}
     .mini-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
     .mini-legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:6px 8px;border:1px solid var(--line);border-radius:999px;background:#0b1220;}
     .swatch{width:10px;height:10px;border-radius:50%;display:inline-block;}
+    .note-box{background:#172236;border:1px dashed var(--line);border-radius:12px;padding:12px;margin-top:14px;color:var(--muted);line-height:1.6;}
     @media (max-width: 960px){.grid,.row,.map-grid{grid-template-columns:1fr;}h1{font-size:28px;}}
   </style>
 </head>
@@ -78,7 +80,7 @@
   <div class="wrap">
     <div class="hero">
       <h1>BSS Interaction Designer</h1>
-      <p>Enter a telecom use case and generate an architect-friendly view of eTOM mapping, domain systems, interaction flow, and a visual architecture diagram.</p>
+      <p>Enter a telecom use case and generate a dynamic architecture flow. The tool changes the primary systems and interaction steps based on whether the scenario is order-driven, care-driven, billing-driven, or change-driven.</p>
     </div>
 
     <div class="grid">
@@ -110,7 +112,7 @@
           </div>
         </div>
 
-        <label for="crm">CRM system name</label>
+        <label for="crm">CRM / Care system name</label>
         <input id="crm" value="Salesforce CRM" />
 
         <div class="row">
@@ -119,18 +121,18 @@
             <input id="catalog" value="Enterprise Product Catalog" />
           </div>
           <div>
-            <label for="oms">Order Management</label>
+            <label for="oms">Order / Service visibility</label>
             <input id="oms" value="Order Management System" />
           </div>
         </div>
 
         <div class="row">
           <div>
-            <label for="orch">Orchestration</label>
+            <label for="orch">Orchestration / Assurance</label>
             <input id="orch" value="Fulfillment Orchestrator" />
           </div>
           <div>
-            <label for="activation">Activation</label>
+            <label for="activation">Activation / Resource</label>
             <input id="activation" value="Activation Gateway" />
           </div>
         </div>
@@ -139,25 +141,26 @@
         <input id="billing" value="Billing & Charging Platform" />
 
         <div class="btns">
-          <button onclick="generate()">Generate Flow</button>
+          <button onclick="generate()">Generate Dynamic Flow</button>
           <button class="secondary" onclick="loadExample('order')">Order Example</button>
           <button class="secondary" onclick="loadExample('care')">Care Example</button>
           <button class="secondary" onclick="loadExample('billing')">Billing Example</button>
+          <button class="secondary" onclick="loadExample('change')">Change Example</button>
         </div>
 
-        <div class="hint">V2 adds a clearer architecture diagram with domain-colored system cards and active-path sequencing.</div>
+        <div class="hint">Dynamic rule: Product Catalog is included only for commercial / order / product-change scenarios, and excluded from the primary interaction path for pure care scenarios.</div>
       </div>
 
       <div class="card">
         <h2>Output</h2>
         <div id="output">
           <div class="empty">
-            Enter a use case and click <b>Generate Flow</b>.<br><br>
-            Output will include:
-            <br>• eTOM mapping
-            <br>• domain system mapping
-            <br>• step-by-step interaction flow
-            <br>• improved visual architecture diagram
+            Enter a use case and click <b>Generate Dynamic Flow</b>.<br><br>
+            Output will adapt by scenario type:
+            <br>• order / fulfillment
+            <br>• care / assurance
+            <br>• billing / dispute
+            <br>• change / MACD
           </div>
         </div>
       </div>
@@ -168,12 +171,26 @@
     function detectFlags(text){
       const t = text.toLowerCase();
       return {
-        order: /(order|new line|new mobile|buy|purchase|subscribe|sale|activate|activation)/.test(t),
+        order: /(order|new line|new mobile|buy|purchase|subscribe|sale|activation|activate)/.test(t),
         credit: /(credit|financing|deposit|risk|fraud)/.test(t),
         care: /(trouble|issue|support|outage|complaint|ticket|care|problem)/.test(t),
         billing: /(bill|billing|invoice|charge|payment|rating|collection|dispute)/.test(t),
-        change: /(change|modify|macd|update|plan change|suspend|resume|disconnect)/.test(t)
+        change: /(change|modify|macd|update|plan change|suspend|resume|disconnect|migration)/.test(t),
+        product: /(offer|pricing|catalog|eligibility|bundle|plan|product)/.test(t)
       };
+    }
+
+    function classifyScenario(flags){
+      if(flags.care && !flags.order && !flags.change && !flags.product){
+        return "care";
+      }
+      if(flags.billing && !flags.order && !flags.change && !flags.product){
+        return "billing";
+      }
+      if(flags.change){
+        return "change";
+      }
+      return "order";
     }
 
     function escapeHtml(str){
@@ -185,81 +202,253 @@
         .replaceAll("'","&#039;");
     }
 
-    function buildSystemFlow(flags, s){
-      const flow = [s.crm, s.catalog, s.oms];
-      if(flags.order || flags.change) flow.push(s.orch, s.activation);
-      if(flags.billing || flags.credit || flags.order) flow.push(s.billing);
-      return [...new Set(flow)];
+    function buildEtomAreas(scenario, flags){
+      if(scenario === "care"){
+        const out = [
+          "Assurance → Customer Assurance",
+          "Assurance → Service Assurance",
+          "Assurance → Resource Assurance"
+        ];
+        if(flags.billing){
+          out.push("Billing → Customer Billing");
+        }
+        return out;
+      }
+      if(scenario === "billing"){
+        return [
+          "Billing → Customer Billing",
+          "Billing → Service Charging & Rating",
+          "Assurance → Customer Visibility"
+        ];
+      }
+      if(scenario === "change"){
+        const out = [
+          "Fulfillment → Customer Fulfillment",
+          "Fulfillment → Service Fulfillment",
+          "Fulfillment → Resource Fulfillment"
+        ];
+        if(flags.billing){
+          out.push("Billing → Customer Billing");
+        }
+        return out;
+      }
+      const out = [
+        "Fulfillment → Customer Fulfillment",
+        "Fulfillment → Service Fulfillment",
+        "Fulfillment → Resource Fulfillment"
+      ];
+      if(flags.billing || flags.credit){
+        out.push("Billing → Customer Billing");
+        out.push("Billing → Service Charging & Rating");
+      }
+      return out;
     }
 
-    function buildSteps(flags, s, channel){
-      const steps = [];
-      steps.push({
-        title: "Capture request in customer domain",
-        detail: `${channel} captures the request in ${s.crm} and identifies the customer, account, and commercial context.`
-      });
-      steps.push({
-        title: "Validate product and commercial offer",
-        detail: `${s.crm} checks eligibility, plan, and pricing through ${s.catalog}.`
-      });
-      steps.push({
-        title: "Create and decompose order",
-        detail: `${s.oms} creates the commercial order and decomposes it into downstream fulfillment tasks.`
-      });
+    function buildSystemFlow(scenario, s, flags){
+      if(scenario === "care"){
+        const flow = [s.crm, s.oms, s.activation];
+        if(flags.billing) flow.push(s.billing);
+        return flow;
+      }
+      if(scenario === "billing"){
+        return [s.crm, s.billing, s.oms];
+      }
+      if(scenario === "change"){
+        const flow = [s.crm, s.catalog, s.oms, s.orch, s.activation];
+        if(flags.billing) flow.push(s.billing);
+        return flow;
+      }
+      const flow = [s.crm, s.catalog, s.oms, s.orch, s.activation];
+      if(flags.billing || flags.credit || flags.order) flow.push(s.billing);
+      return flow;
+    }
 
+    function buildSteps(scenario, s, channel, flags){
+      if(scenario === "care"){
+        const steps = [
+          {
+            title: "Capture service issue in care / CRM",
+            detail: `${channel} or care operations capture the issue in ${s.crm} with customer, account, and service context.`
+          },
+          {
+            title: "Retrieve service and order visibility",
+            detail: `${s.oms} provides service state, order history, and prior fulfillment visibility to support troubleshooting.`
+          },
+          {
+            title: "Check technical / resource status",
+            detail: `${s.activation} provides provisioning, activation, or resource state needed to understand the service issue.`
+          }
+        ];
+        if(flags.billing){
+          steps.push({
+            title: "Check billing visibility if customer impact includes charges",
+            detail: `${s.billing} provides invoice, charge, or dispute visibility when the issue involves bill impact.`
+          });
+        }
+        steps.push({
+          title: "Return consolidated view to care",
+          detail: `${s.crm} presents an agent-friendly or customer-facing view of issue status and next action.`
+        });
+        return steps;
+      }
+
+      if(scenario === "billing"){
+        return [
+          {
+            title: "Capture billing issue in CRM / care",
+            detail: `${channel} captures the billing concern in ${s.crm} and identifies the affected account and invoice context.`
+          },
+          {
+            title: "Review invoice and charging context",
+            detail: `${s.billing} provides invoice, charge, balance, or dispute details for validation.`
+          },
+          {
+            title: "Cross-check order or service history",
+            detail: `${s.oms} provides supporting order or service history when billing needs downstream traceability.`
+          },
+          {
+            title: "Return consolidated billing explanation",
+            detail: `${s.crm} reflects the outcome back to the care agent or customer.`
+          }
+        ];
+      }
+
+      if(scenario === "change"){
+        const steps = [
+          {
+            title: "Capture requested change in customer domain",
+            detail: `${channel} captures the requested change in ${s.crm} and identifies the impacted account, service, and customer context.`
+          },
+          {
+            title: "Validate offer or change eligibility",
+            detail: `${s.crm} checks eligibility, pricing, or product compatibility through ${s.catalog}.`
+          },
+          {
+            title: "Create and decompose change order",
+            detail: `${s.oms} creates the change order and decomposes it into downstream fulfillment actions.`
+          },
+          {
+            title: "Coordinate service change execution",
+            detail: `${s.orch} coordinates the change flow and hands technical execution to ${s.activation}.`
+          },
+          {
+            title: "Update service / resource state",
+            detail: `${s.activation} applies the requested service or resource changes.`
+          }
+        ];
+        if(flags.billing){
+          steps.push({
+            title: "Adjust billing context",
+            detail: `${s.billing} updates billing and charging context for the changed service state.`
+          });
+        }
+        steps.push({
+          title: "Return updated status to the business view",
+          detail: `${s.crm} reflects status and completion back to the user or care agent.`
+        });
+        return steps;
+      }
+
+      const steps = [
+        {
+          title: "Capture request in customer domain",
+          detail: `${channel} captures the request in ${s.crm} and identifies the customer, account, and commercial context.`
+        },
+        {
+          title: "Validate product and commercial offer",
+          detail: `${s.crm} checks eligibility, plan, pricing, or bundle rules through ${s.catalog}.`
+        },
+        {
+          title: "Create and decompose order",
+          detail: `${s.oms} creates the commercial order and decomposes it into downstream fulfillment tasks.`
+        }
+      ];
       if(flags.credit){
         steps.push({
           title: "Perform financing / charging preparation",
           detail: `${s.oms} and ${s.billing} establish charging, financing, or billing readiness needed for the transaction.`
         });
       }
-
-      if(flags.order || flags.change){
-        steps.push({
-          title: "Coordinate fulfillment execution",
-          detail: `${s.orch} coordinates service activities and hands off technical execution to ${s.activation}.`
-        });
-        steps.push({
-          title: "Activate resource / service",
-          detail: `${s.activation} provisions and activates the requested service or resource.`
-        });
-      }
-
+      steps.push({
+        title: "Coordinate fulfillment execution",
+        detail: `${s.orch} coordinates service activities and hands off technical execution to ${s.activation}.`
+      });
+      steps.push({
+        title: "Activate resource / service",
+        detail: `${s.activation} provisions and activates the requested service or resource.`
+      });
       if(flags.billing || flags.order || flags.credit){
         steps.push({
           title: "Establish billing context",
           detail: `${s.billing} creates billable setup, charging context, and downstream invoice readiness.`
         });
       }
-
-      if(flags.care){
-        steps.push({
-          title: "Handle issue through assurance flow",
-          detail: `${s.crm} or care processes can open assurance workflows, with service/resource investigation tied to the request.`
-        });
-      }
-
       steps.push({
         title: "Return status to the business / customer view",
-        detail: `Status is reflected back through ${s.crm} for user visibility and operational tracking.`
+        detail: `${s.crm} reflects order and fulfillment status back to the customer-facing channel.`
       });
       return steps;
     }
 
-    function buildDiagram(flags, s){
+    function buildDiagram(scenario, s, flags){
+      if(scenario === "care"){
+        const boxes = [
+          {title: s.crm, sub: "Care intake, customer and issue context", domain: "dom-customer", domLabel: "Customer / Care"},
+          {title: s.oms, sub: "Service and order history visibility", domain: "dom-order", domLabel: "Service / Order View"},
+          {title: s.activation, sub: "Technical state, provisioning, and resource status", domain: "dom-assurance", domLabel: "Assurance / Resource"}
+        ];
+        if(flags.billing){
+          boxes.push({title: s.billing, sub: "Bill impact, charges, or dispute visibility", domain: "dom-billing", domLabel: "Billing / Visibility"});
+        }
+        return boxes;
+      }
+
+      if(scenario === "billing"){
+        return [
+          {title: s.crm, sub: "Customer and issue intake", domain: "dom-customer", domLabel: "Customer / Care"},
+          {title: s.billing, sub: "Invoice, charge, and dispute context", domain: "dom-billing", domLabel: "Billing / Charging"},
+          {title: s.oms, sub: "Order and service traceability", domain: "dom-order", domLabel: "Order / Service"}
+        ];
+      }
+
+      if(scenario === "change"){
+        const boxes = [
+          {title: s.crm, sub: "Customer change request and account context", domain: "dom-customer", domLabel: "Customer / CRM"},
+          {title: s.catalog, sub: "Eligibility, offer, and pricing validation", domain: "dom-commercial", domLabel: "Commercial / Catalog"},
+          {title: s.oms, sub: "Change order and service intent", domain: "dom-order", domLabel: "Order / Service"},
+          {title: s.orch, sub: "Change coordination and workflow control", domain: "dom-order", domLabel: "Orchestration"},
+          {title: s.activation, sub: "Service/resource update execution", domain: "dom-resource", domLabel: "Resource / Activation"}
+        ];
+        if(flags.billing){
+          boxes.push({title: s.billing, sub: "Updated charging and billing context", domain: "dom-billing", domLabel: "Billing / Charging"});
+        }
+        return boxes;
+      }
+
       const boxes = [
         {title: s.crm, sub: "Customer relationship and account context", domain: "dom-customer", domLabel: "Customer / CRM"},
         {title: s.catalog, sub: "Offer, plan, pricing, and eligibility", domain: "dom-commercial", domLabel: "Commercial / Catalog"},
-        {title: s.oms, sub: "Order capture, decomposition, and service intent", domain: "dom-order", domLabel: "Order / Service"}
+        {title: s.oms, sub: "Order capture, decomposition, and service intent", domain: "dom-order", domLabel: "Order / Service"},
+        {title: s.orch, sub: "Fulfillment coordination and workflow control", domain: "dom-order", domLabel: "Orchestration"},
+        {title: s.activation, sub: "Provisioning, activation, and resource execution", domain: "dom-resource", domLabel: "Resource / Activation"}
       ];
-      if(flags.order || flags.change){
-        boxes.push({title: s.orch, sub: "Fulfillment coordination and workflow control", domain: "dom-order", domLabel: "Orchestration"});
-        boxes.push({title: s.activation, sub: "Provisioning, activation, and resource execution", domain: "dom-resource", domLabel: "Resource / Activation"});
-      }
       if(flags.billing || flags.order || flags.credit){
         boxes.push({title: s.billing, sub: "Charging, invoice readiness, and financial setup", domain: "dom-billing", domLabel: "Billing / Charging"});
       }
       return boxes;
+    }
+
+    function scenarioNote(scenario){
+      if(scenario === "care"){
+        return "Architectural note: For pure Care / Assurance scenarios, Product Catalog is excluded from the primary interaction path because the flow is focused on issue visibility, service status, resource state, and billing impact where relevant.";
+      }
+      if(scenario === "billing"){
+        return "Architectural note: Billing-led scenarios prioritize billing and traceability systems rather than commercial offer validation, so Product Catalog is excluded from the primary path.";
+      }
+      if(scenario === "change"){
+        return "Architectural note: Change scenarios usually keep Product Catalog in the primary path because offer compatibility, pricing, or entitlement validation may still be required.";
+      }
+      return "Architectural note: Order-driven scenarios include Product Catalog in the primary interaction path because product eligibility, pricing, and commercial structure are part of the flow.";
     }
 
     function generate(){
@@ -281,31 +470,16 @@
       };
 
       const flags = detectFlags(usecase);
-      const etomAreas = [];
-      if(flags.order || flags.change){
-        etomAreas.push("Fulfillment → Customer Fulfillment");
-        etomAreas.push("Fulfillment → Service Fulfillment");
-        etomAreas.push("Fulfillment → Resource Fulfillment");
-      }
-      if(flags.billing || flags.credit){
-        etomAreas.push("Billing → Customer Billing");
-        etomAreas.push("Billing → Service Charging & Rating");
-      }
-      if(flags.care){
-        etomAreas.push("Assurance → Customer Assurance");
-        etomAreas.push("Assurance → Service Assurance");
-        etomAreas.push("Assurance → Resource Assurance");
-      }
-      if(etomAreas.length === 0){
-        etomAreas.push("Fulfillment → Customer Fulfillment");
-      }
-
-      const systemFlow = buildSystemFlow(flags, systems);
-      const steps = buildSteps(flags, systems, channel);
-      const diagram = buildDiagram(flags, systems);
+      const scenario = classifyScenario(flags);
+      const etomAreas = buildEtomAreas(scenario, flags);
+      const systemFlow = buildSystemFlow(scenario, systems, flags);
+      const steps = buildSteps(scenario, systems, channel, flags);
+      const diagram = buildDiagram(scenario, systems, flags);
+      const note = scenarioNote(scenario);
 
       document.getElementById("output").innerHTML = `
         <div class="chips">
+          <span class="chip">Scenario: ${scenario.toUpperCase()}</span>
           ${etomAreas.map(x => `<span class="chip">${x}</span>`).join("")}
         </div>
 
@@ -317,12 +491,12 @@
 
         <h3>Domain system mapping</h3>
         <div class="map-grid">
-          <div class="map-item"><b>Customer domain</b>${systems.crm}</div>
-          <div class="map-item"><b>Commercial product domain</b>${systems.catalog}</div>
-          <div class="map-item"><b>Order / service domain</b>${systems.oms}</div>
-          <div class="map-item"><b>Orchestration domain</b>${systems.orch}</div>
-          <div class="map-item"><b>Resource / activation domain</b>${systems.activation}</div>
-          <div class="map-item"><b>Billing / charging domain</b>${systems.billing}</div>
+          ${systemFlow.includes(systems.crm) ? `<div class="map-item"><b>Customer / Care domain</b>${systems.crm}</div>` : ``}
+          ${systemFlow.includes(systems.catalog) ? `<div class="map-item"><b>Commercial product domain</b>${systems.catalog}</div>` : ``}
+          ${systemFlow.includes(systems.oms) ? `<div class="map-item"><b>Order / service visibility domain</b>${systems.oms}</div>` : ``}
+          ${systemFlow.includes(systems.orch) ? `<div class="map-item"><b>Orchestration / assurance domain</b>${systems.orch}</div>` : ``}
+          ${systemFlow.includes(systems.activation) ? `<div class="map-item"><b>Resource / activation domain</b>${systems.activation}</div>` : ``}
+          ${systemFlow.includes(systems.billing) ? `<div class="map-item"><b>Billing / charging domain</b>${systems.billing}</div>` : ``}
         </div>
 
         <h3>System flow</h3>
@@ -345,17 +519,18 @@
             `).join("")}
           </div>
           <div class="mini-legend">
-            <span><i class="swatch" style="background:var(--cust)"></i> Customer / CRM</span>
+            <span><i class="swatch" style="background:var(--cust)"></i> Customer / Care</span>
             <span><i class="swatch" style="background:var(--comm)"></i> Commercial / Catalog</span>
             <span><i class="swatch" style="background:var(--order)"></i> Order / Orchestration</span>
             <span><i class="swatch" style="background:var(--resource)"></i> Resource / Activation</span>
             <span><i class="swatch" style="background:var(--bill)"></i> Billing / Charging</span>
+            <span><i class="swatch" style="background:var(--assure)"></i> Assurance / Resource</span>
           </div>
         </div>
-<div class="legend">
-  <b>Architectural note:</b> Product Catalog is included in Fulfillment (order/commercial flows) but excluded from primary paths in Assurance (Care) scenarios, unless required for entitlement or offer validation.
-</div>
-<h3>Step-by-step interaction</h3>
+
+        <div class="note-box"><b>${escapeHtml(note)}</b></div>
+
+        <h3>Step-by-step interaction</h3>
         ${steps.map((s, i) => `
           <div class="step">
             <div class="step-num">Step ${i+1}</div>
@@ -364,7 +539,7 @@
           </div>
         `).join("")}
 
-        <div class="legend">V2 note: the diagram emphasizes system domains and active transaction path to make architecture discussion easier for workshops and design reviews.</div>
+        <div class="legend">Dynamic note: this version classifies the primary use case and adapts the architecture path, system selection, and interaction narrative accordingly.</div>
       `;
     }
 
@@ -377,6 +552,9 @@
       }
       if(type === "billing"){
         document.getElementById("usecase").value = "Customer disputes a telecom invoice and the solution needs billing, charging, CRM, and order traceability.";
+      }
+      if(type === "change"){
+        document.getElementById("usecase").value = "Customer changes rate plan and billing must be updated while service state is adjusted.";
       }
       generate();
     }

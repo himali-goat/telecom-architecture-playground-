@@ -352,8 +352,10 @@
             <span><i class="swatch" style="background:var(--bill)"></i> Billing / Charging</span>
           </div>
         </div>
-
-        <h3>Step-by-step interaction</h3>
+<div class="legend">
+  <b>Architectural note:</b> Product Catalog is included in Fulfillment (order/commercial flows) but excluded from primary paths in Assurance (Care) scenarios, unless required for entitlement or offer validation.
+</div>
+<h3>Step-by-step interaction</h3>
         ${steps.map((s, i) => `
           <div class="step">
             <div class="step-num">Step ${i+1}</div>

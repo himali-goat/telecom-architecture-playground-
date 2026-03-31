@@ -1,1 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BSS Interaction Designer</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --panel2:#1f2937;
+      --line:#334155;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --accent:#3b82f6;
+      --good:#10b981;
+      --chip:#0b1220;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial, Helvetica, sans-serif;background:var(--bg);color:var(--text);}
+    .wrap{max-width:1200px;margin:0 auto;padding:32px 20px 48px;}
+    .hero,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.2);}
+    .hero{padding:24px;margin-bottom:18px;}
+    .grid{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;align-items:start;}
+    .card{padding:20px;}
+    h1{margin:0 0 8px;font-size:34px;line-height:1.1;}
+    h2{margin:0 0 12px;font-size:20px;}
+    h3{margin:18px 0 10px;font-size:17px;}
+    p{margin:0;color:var(--muted);line-height:1.6;}
+    label{display:block;font-size:13px;margin:14px 0 6px;color:var(--muted);}
+    textarea,select,input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 13px;font-size:14px;outline:none;}
+    textarea{min-height:120px;resize:vertical;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+    button{border:none;border-radius:12px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;}
+    button.secondary{background:transparent;border:1px solid var(--line);color:var(--text);}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+    .chip{background:var(--chip);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:6px 10px;font-size:12px;}
+    .map-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .map-item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;}
+    .map-item b{display:block;margin-bottom:6px;}
+    .step{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;}
+    .step-num{color:var(--good);font-weight:700;margin-bottom:6px;}
+    .diagram{overflow-x:auto;padding-bottom:6px;}
+    .flow{display:flex;align-items:center;gap:10px;min-width:max-content;flex-wrap:nowrap;}
+    .box{min-width:170px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;}
+    .box-title{font-weight:700;margin-bottom:6px;}
+    .box-sub{font-size:12px;color:var(--muted);}
+    .arrow{font-size:26px;color:var(--accent);font-weight:700;}
+    .hint{font-size:12px;color:var(--muted);margin-top:10px;}
+    .empty{background:var(--panel2);border:1px dashed var(--line);border-radius:14px;padding:20px;color:var(--muted);line-height:1.6;}
+    .legend{margin-top:12px;font-size:13px;color:var(--muted);}
+    @media (max-width: 900px){.grid,.row,.map-grid{grid-template-columns:1fr;}h1{font-size:28px;}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>BSS Interaction Designer</h1>
+      <p>Enter a telecom use case and generate an architect-friendly view of eTOM mapping, domain systems, system interaction flow, and a simple visual diagram.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Input</h2>
+
+        <label for="usecase">Use case</label>
+        <textarea id="usecase" placeholder="Example: Business customer orders a new mobile line with device financing and activation.">Business customer orders a new mobile line with device financing and activation.</textarea>
+
+        <div class="row">
+          <div>
+            <label for="segment">Customer segment</label>
+            <select id="segment">
+              <option>Consumer</option>
+              <option selected>Business</option>
+              <option>Government</option>
+              <option>Wholesale</option>
+            </select>
+          </div>
+          <div>
+            <label for="channel">Originating channel</label>
+            <select id="channel">
+              <option selected>Digital / Web</option>
+              <option>Retail</option>
+              <option>Call Center</option>
+              <option>Partner / API</option>
+              <option>Care</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="crm">CRM system name</label>
+        <input id="crm" value="Salesforce CRM" />
+
+        <div class="row">
+          <div>
+            <label for="catalog">Product Catalog</label>
+            <input id="catalog" value="Enterprise Product Catalog" />
+          </div>
+          <div>
+            <label for="oms">Order Management</label>
+            <input id="oms" value="Order Management System" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="orch">Orchestration</label>
+            <input id="orch" value="Fulfillment Orchestrator" />
+          </div>
+          <div>
+            <label for="activation">Activation</label>
+            <input id="activation" value="Activation Gateway" />
+          </div>
+        </div>
+
+        <label for="billing">Billing / Charging</label>
+        <input id="billing" value="Billing & Charging Platform" />
+
+        <div class="btns">
+          <button onclick="generate()">Generate Flow</button>
+          <button class="secondary" onclick="loadExample('order')">Order Example</button>
+          <button class="secondary" onclick="loadExample('care')">Care Example</button>
+          <button class="secondary" onclick="loadExample('billing')">Billing Example</button>
+        </div>
+
+        <div class="hint">V1 scope: structured mapping + system flow + simple visual diagram. This version uses lightweight rules for common telecom scenarios.</div>
+      </div>
+
+      <div class="card">
+        <h2>Output</h2>
+        <div id="output">
+          <div class="empty">
+            Enter a use case and click <b>Generate Flow</b>.<br><br>
+            Output will include:
+            <br>• eTOM mapping
+            <br>• domain system mapping
+            <br>• step-by-step interaction flow
+            <br>• simple visual architecture flow
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function detectFlags(text){
+      const t = text.toLowerCase();
+      return {
+        order: /(order|new line|new mobile|buy|purchase|subscribe|sale|activate|activation)/.test(t),
+        credit: /(credit|financing|deposit|risk|fraud)/.test(t),
+        care: /(trouble|issue|support|outage|complaint|ticket|care|problem)/.test(t),
+        billing: /(bill|billing|invoice|charge|payment|rating|collection|dispute)/.test(t),
+        change: /(change|modify|macd|update|plan change|suspend|resume|disconnect)/.test(t)
+      };
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function buildSystemFlow(flags, s){
+      const flow = [s.crm, s.catalog, s.oms];
+      if(flags.order || flags.change) flow.push(s.orch, s.activation);
+      if(flags.billing || flags.credit || flags.order) flow.push(s.billing);
+      return [...new Set(flow)];
+    }
+
+    function buildSteps(flags, s, channel){
+      const steps = [];
+      steps.push({
+        title: "Capture request in customer domain",
+        detail: `${channel} captures the request in ${s.crm} and identifies the customer, account, and commercial context.`
+      });
+      steps.push({
+        title: "Validate product and commercial offer",
+        detail: `${s.crm} checks eligibility, plan, and pricing through ${s.catalog}.`
+      });
+      steps.push({
+        title: "Create and decompose order",
+        detail: `${s.oms} creates the commercial order and decomposes it into downstream fulfillment tasks.`
+      });
+
+      if(flags.credit){
+        steps.push({
+          title: "Perform financing / charging preparation",
+          detail: `${s.oms} and ${s.billing} establish charging, financing, or billing readiness needed for the transaction.`
+        });
+      }
+
+      if(flags.order || flags.change){
+        steps.push({
+          title: "Coordinate fulfillment execution",
+          detail: `${s.orch} coordinates service activities and hands off technical execution to ${s.activation}.`
+        });
+        steps.push({
+          title: "Activate resource / service",
+          detail: `${s.activation} provisions and activates the requested service or resource.`
+        });
+      }
+
+      if(flags.billing || flags.order || flags.credit){
+        steps.push({
+          title: "Establish billing context",
+          detail: `${s.billing} creates billable setup, charging context, and downstream invoice readiness.`
+        });
+      }
+
+      if(flags.care){
+        steps.push({
+          title: "Handle issue through assurance flow",
+          detail: `${s.crm} or care processes can open assurance workflows, with service/resource investigation tied to the request.`
+        });
+      }
+
+      steps.push({
+        title: "Return status to the business / customer view",
+        detail: `Status is reflected back through ${s.crm} for user visibility and operational tracking.`
+      });
+      return steps;
+    }
+
+    function buildDiagram(flags, s){
+      const boxes = [
+        {title: s.crm, sub: "Customer / CRM"},
+        {title: s.catalog, sub: "Product / Pricing"},
+        {title: s.oms, sub: "Order / Service"}
+      ];
+      if(flags.order || flags.change){
+        boxes.push({title: s.orch, sub: "Orchestration"});
+        boxes.push({title: s.activation, sub: "Activation / Resource"});
+      }
+      if(flags.billing || flags.order || flags.credit){
+        boxes.push({title: s.billing, sub: "Billing / Charging"});
+      }
+      return boxes;
+    }
+
+    function generate(){
+      const usecase = document.getElementById("usecase").value.trim();
+      if(!usecase){
+        alert("Please enter a use case.");
+        return;
+      }
+
+      const segment = document.getElementById("segment").value;
+      const channel = document.getElementById("channel").value;
+      const systems = {
+        crm: document.getElementById("crm").value.trim() || "Salesforce CRM",
+        catalog: document.getElementById("catalog").value.trim() || "Enterprise Product Catalog",
+        oms: document.getElementById("oms").value.trim() || "Order Management System",
+        orch: document.getElementById("orch").value.trim() || "Fulfillment Orchestrator",
+        activation: document.getElementById("activation").value.trim() || "Activation Gateway",
+        billing: document.getElementById("billing").value.trim() || "Billing & Charging Platform"
+      };
+
+      const flags = detectFlags(usecase);
+      const etomAreas = [];
+      if(flags.order || flags.change){
+        etomAreas.push("Fulfillment → Customer Fulfillment");
+        etomAreas.push("Fulfillment → Service Fulfillment");
+        etomAreas.push("Fulfillment → Resource Fulfillment");
+      }
+      if(flags.billing || flags.credit){
+        etomAreas.push("Billing → Customer Billing");
+        etomAreas.push("Billing → Service Charging & Rating");
+      }
+      if(flags.care){
+        etomAreas.push("Assurance → Customer Assurance");
+        etomAreas.push("Assurance → Service Assurance");
+        etomAreas.push("Assurance → Resource Assurance");
+      }
+      if(etomAreas.length === 0){
+        etomAreas.push("Fulfillment → Customer Fulfillment");
+      }
+
+      const systemFlow = buildSystemFlow(flags, systems);
+      const steps = buildSteps(flags, systems, channel);
+      const diagram = buildDiagram(flags, systems);
+
+      document.getElementById("output").innerHTML = `
+        <div class="chips">
+          ${etomAreas.map(x => `<span class="chip">${x}</span>`).join("")}
+        </div>
+
+        <h3>Context</h3>
+        <div class="map-grid">
+          <div class="map-item"><b>Use case</b>${escapeHtml(usecase)}</div>
+          <div class="map-item"><b>Segment / Channel</b>${segment} / ${channel}</div>
+        </div>
+
+        <h3>Domain system mapping</h3>
+        <div class="map-grid">
+          <div class="map-item"><b>Customer domain</b>${systems.crm}</div>
+          <div class="map-item"><b>Commercial product domain</b>${systems.catalog}</div>
+          <div class="map-item"><b>Order / service domain</b>${systems.oms}</div>
+          <div class="map-item"><b>Orchestration domain</b>${systems.orch}</div>
+          <div class="map-item"><b>Resource / activation domain</b>${systems.activation}</div>
+          <div class="map-item"><b>Billing / charging domain</b>${systems.billing}</div>
+        </div>
+
+        <h3>System flow</h3>
+        <div class="chips">
+          ${systemFlow.map(x => `<span class="chip">${x}</span>`).join("")}
+        </div>
+
+        <h3>Step-by-step interaction</h3>
+        ${steps.map((s, i) => `
+          <div class="step">
+            <div class="step-num">Step ${i+1}</div>
+            <div><b>${s.title}</b></div>
+            <div class="legend">${s.detail}</div>
+          </div>
+        `).join("")}
+
+        <h3>Visual flow</h3>
+        <div class="diagram">
+          <div class="flow">
+            ${diagram.map((d, i) => `
+              ${i > 0 ? `<div class="arrow">→</div>` : ``}
+              <div class="box">
+                <div class="box-title">${d.title}</div>
+                <div class="box-sub">${d.sub}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="legend">V1 note: this is a practical architecture starter view for workshops and solution design, not a full orchestration engine.</div>
+      `;
+    }
+
+    function loadExample(type){
+      if(type === "order"){
+        document.getElementById("usecase").value = "Business customer orders a new mobile line with device financing and activation.";
+      }
+      if(type === "care"){
+        document.getElementById("usecase").value = "Customer reports a service issue and the care team needs system interaction across CRM, assurance, and billing visibility.";
+      }
+      if(type === "billing"){
+        document.getElementById("usecase").value = "Customer disputes a telecom invoice and the solution needs billing, charging, CRM, and order traceability.";
+      }
+      generate();
+    }
+
+    generate();
+  </script>
+</body>
+</html>
 
